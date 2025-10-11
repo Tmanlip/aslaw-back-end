@@ -1,4 +1,4 @@
-# Build and deploy Laravel (PHP) app to Azure Web App
+# 🚀 Build and deploy Laravel (PHP 8.3) app to Azure Web App
 name: Build and deploy PHP app to Azure Web App - aslaw-back-end
 
 on:
@@ -14,35 +14,48 @@ jobs:
       contents: read
 
     steps:
+      # 🛠 Checkout source code
       - uses: actions/checkout@v4
 
+      # ⚙️ Setup PHP 8.3
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+          extensions: mbstring, bcmath, intl, pdo, pdo_mysql, openssl
+          coverage: none
 
-      - name: Validate and install dependencies
+      # 📦 Install dependencies
+      - name: Install Composer dependencies
         run: |
-          composer validate --no-check-publish
           composer install --no-dev --optimize-autoloader
 
-      - name: Copy environment example
+      # 🔑 Generate app key and prepare environment
+      - name: Setup environment
         run: |
           cp .env.example .env
           php artisan key:generate
 
-      # ✅ Make sure hidden files (like .htaccess) are included
+      # 🧰 Prepare deployment folder (public + backend files)
       - name: Prepare artifact for deployment
         run: |
-          echo "Preparing app for deployment..."
-          ls -la
-        shell: bash
+          mkdir deploy
+          cp -R public/* deploy/
+          cp -R vendor deploy/vendor
+          cp -R bootstrap deploy/bootstrap
+          cp .env deploy/.env
+          cp artisan deploy/artisan
+          cp composer.json deploy/composer.json
+          cp composer.lock deploy/composer.lock
+          echo "Deployment package prepared:"
+          ls -la deploy
 
+      # ☁️ Upload artifact for deployment
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: php-app
-          path: .
+          path: deploy/
 
   deploy:
     runs-on: ubuntu-latest
@@ -52,18 +65,21 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build
+      # 📦 Download artifact from build
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: php-app
 
-      - name: Login to Azure
+      # 🔐 Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D489C82A67404A39B371321D84D01288 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADDFBF33F1E34CB68E69169C5D263C43 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F170708E314A429388A93A916D91B5F2 }}
 
+      # 🚀 Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
