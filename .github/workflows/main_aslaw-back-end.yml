@@ -50,6 +50,10 @@ jobs:
           echo "Deployment package prepared:"
           ls -la deploy
 
+    - name: Make startup script executable
+        run: chmod +x startup.sh
+
+
       # ☁️ Upload artifact for deployment
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -87,3 +91,4 @@ jobs:
           app-name: 'aslaw-back-end'
           slot-name: 'Production'
           package: .
+
