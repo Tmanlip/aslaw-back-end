@@ -47,12 +47,11 @@ jobs:
           cp artisan deploy/artisan
           cp composer.json deploy/composer.json
           cp composer.lock deploy/composer.lock
+          # ✅ Add startup.sh for Nginx on Linux
+          echo -e "#!/bin/bash\ncd /home/site/wwwroot/public\nphp -S 0.0.0.0:8000 -t ." > deploy/startup.sh
+          chmod +x deploy/startup.sh
           echo "Deployment package prepared:"
           ls -la deploy
-
-    - name: Make startup script executable
-        run: chmod +x startup.sh
-
 
       # ☁️ Upload artifact for deployment
       - name: Upload artifact for deployment
@@ -90,5 +89,4 @@ jobs:
         with:
           app-name: 'aslaw-back-end'
           slot-name: 'Production'
-          package: .
-
+          package: deploy/
